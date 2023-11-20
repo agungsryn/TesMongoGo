@@ -4,21 +4,39 @@ import (
 	"log"
 	"net/http"
 
+	"be-go-mongo/db"
+	"be-go-mongo/formulir"
+	"be-go-mongo/user"
+
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
 
 	route := mux.NewRouter()
 	s := route.PathPrefix("/api").Subrouter() //Base Path
-
+	_ = db.ConnectMongo()
 	//Routes
 
-	s.HandleFunc("/createProfile", createProfile).Methods("POST")
-	s.HandleFunc("/getAllUsers", getAllUsers).Methods("GET")
-	s.HandleFunc("/getUserProfile", getUserProfile).Methods("POST")
-	s.HandleFunc("/updateProfile", updateProfile).Methods("PUT")
-	s.HandleFunc("/deleteProfile/{id}", deleteProfile).Methods("DELETE")
+	//user
+	s.HandleFunc("/createUser", user.CreateUser).Methods("POST")
+	s.HandleFunc("/getUsers", user.GetUsers).Methods("GET")
+	s.HandleFunc("/updateUser/{id}", user.UpdateUser).Methods("PUT")
+	s.HandleFunc("/deleteUser/{id}", user.DeleteUser).Methods("DELETE")
+	s.HandleFunc("/getUserById/{id}", user.GetUserById).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":8000", s)) // Run Server
+	//formulir
+	s.HandleFunc("/createFormulir", formulir.CreateFormulir).Methods("POST")
+
+
+	c := cors.New(cors.Options{
+        AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET","POST","PUT","HEAD","DELETE"},
+        AllowCredentials: true,
+    })
+
+    handler := c.Handler(s)
+	
+	log.Fatal(http.ListenAndServe(":8000", handler)) // Run Server
 }
